@@ -2,6 +2,7 @@ import pika
 import json
 import uuid
 from app import app, db, Book
+import os
 
 def fetch_book_data_with_rating(query):
     import urllib.request
