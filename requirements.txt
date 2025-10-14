@@ -3,4 +3,4 @@ SQLAlchemy
 pika
 gunicorn
 requests
-
+Flask-SQLAlchemy
