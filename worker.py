@@ -73,7 +73,7 @@ def process_task(ch, method, properties, body):
         print(f"Saved book title: {new_book.title}")
 
 def main():
-    amqp_url = os.environ.get('amqps://lklnluig:9JOsBxLEM0WDUUSLtMhxz6fEIHyC21dZ@shark.rmq.cloudamqp.com/lklnluig')
+    amqp_url = os.environ.get('CLOUDAMQP_URL')
     params = pika.URLParameters(amqp_url)
     connection = pika.BlockingConnection(params)
     channel = connection.channel()
