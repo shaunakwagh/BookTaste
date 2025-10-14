@@ -3,9 +3,10 @@ import json
 import uuid
 from app import app, db, Book
 import os
-import urllib.parse
+
 
 def fetch_book_data_with_rating(query):
+    import urllib.parse
     import urllib.request
     encoded_query = urllib.parse.quote_plus(query)
     search_url = f"https://openlibrary.org/search.json?q={encoded_query}&limit=1"
