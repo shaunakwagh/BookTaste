@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 from flask import Flask, request, render_template_string
 from flask_sqlalchemy import SQLAlchemy
-import uuid
-import urllib.request
+import pika
 import json
 
 app = Flask(__name__)
@@ -34,11 +33,11 @@ HTML_TEMPLATE = """
 </head>
 <body>
     <h1>Book Recommendation System</h1>
-    <h3>Search and collect book data from Open Library API</h3>
+    <h3>Search and collect book data from Open Library API (queued)</h3>
     <form action="/collect" method="POST">
         <label>Enter ISBN (e.g., 9780140328721) or book title:</label><br>
         <input name="user_input" placeholder="ISBN or book title" required>
-        <input type="submit" value="Collect Book Data!">
+        <input type="submit" value="Queue Book Data!">
     </form>
     <h3>See how good is your Book taste!</h3>
     <form action="/get_taste" method="GET">
@@ -52,43 +51,13 @@ HTML_TEMPLATE = """
 </html>
 """
 
-def fetch_book_data_with_rating(query):
-    search_url = f"https://openlibrary.org/search.json?q={query}&limit=1"
-    try:
-        with urllib.request.urlopen(search_url) as resp:
-            data = json.loads(resp.read().decode('utf-8'))
-            docs = data.get('docs', [])
-            if docs:
-                doc = docs[0]
-                title = doc.get('title', 'Unknown')
-                author = ', '.join(doc.get('author_name', [])) if doc.get('author_name') else None
-                isbn = doc['isbn'][0] if doc.get('isbn') else None
-                publish_year = doc.get('first_publish_year')
-                page_count = doc.get('number_of_pages_median')
-                cover_edition_key = doc.get('cover_edition_key')
-                work_key = doc.get('key')
-                rating = None
-                if work_key and work_key.startswith("/works/"):
-                    ratings_url = f"https://openlibrary.org{work_key}/ratings.json"
-                    try:
-                        with urllib.request.urlopen(ratings_url) as rresp:
-                            rdata = json.loads(rresp.read().decode('utf-8'))
-                            rating = rdata.get('summary', {}).get('average')
-                    except Exception as re:
-                        print(f"Could not retrieve ratings for {work_key}: {re}")
-                return {
-                    'title': title,
-                    'author': author,
-                    'isbn': isbn,
-                    'publish_year': publish_year,
-                    'page_count': page_count,
-                    'cover_edition_key': cover_edition_key,
-                    'work_key': work_key,
-                    'rating': rating
-                }
-    except Exception as e:
-        print("OpenLibrary fetch error:", e)
-    return None
+def send_to_queue(user_input):
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue='book_tasks')
+    task = json.dumps({"user_input": user_input})
+    channel.basic_publish(exchange='', routing_key='book_tasks', body=task)
+    connection.close()
 
 @app.route('/')
 def main():
@@ -99,30 +68,8 @@ def collect():
     raw_input = request.form.get('user_input', '').strip()
     if not raw_input:
         return "Please enter a book title or ISBN!"
-    book_data = fetch_book_data_with_rating(raw_input)
-    if not book_data or not book_data['title']:
-        return f"No book found for: {raw_input} <br><a href='/'>Go back</a>"
-    # If OpenLibrary didn't return an ISBN, generate a synthetic one
-    if not book_data.get('isbn'):
-        book_data['isbn'] = f"gen-{uuid.uuid4().hex}"
-
-    existing = Book.query.filter_by(title=book_data.get('title')).first()
-    if existing:
-        return f"Book already collected: {book_data.get('title')} <br><a href='/'>Go back</a>"
-
-    new_book = Book(
-        isbn=book_data.get('isbn'),
-        title=book_data.get('title'),
-        author=book_data.get('author'),
-        publish_year=book_data.get('publish_year'),
-        page_count=book_data.get('page_count'),
-        rating=book_data.get('rating'),
-        cover_edition_key=book_data.get('cover_edition_key'),
-        work_key=book_data.get('work_key')
-    )
-    db.session.add(new_book)
-    db.session.commit()
-    return f"Saved book title: {new_book.title} <br><a href='/'>Go back</a>"
+    send_to_queue(raw_input)
+    return f"Task queued for: {raw_input} <br><a href='/'>Go back</a>"
 
 @app.route('/get_taste')
 def get_recommendations():
@@ -131,8 +78,7 @@ def get_recommendations():
         return "<h3>No books with a rating collected yet.</h3><br><a href='/'>Go back</a>"
     avg_rating = sum(b.rating for b in books) / len(books)
     result_html = f"<h2>Your Reading Taste Score</h2>"
-    result_html += f"<p><strong>Average rating of your collected books is:</strong> {avg_rating:.2f} / 5</p>"
-
+    result_html += f"<p><strong>Average rating of your taste:</strong> {avg_rating:.2f} / 5</p>"
     result_html += "<h3>Here are your rated books:</h3>"
     for i, book in enumerate(books, 1):
         cover_html = ""
