@@ -3,3 +3,4 @@ SQLAlchemy
 pika
 gunicorn
 requests
+os

@@ -73,7 +73,9 @@ def process_task(ch, method, properties, body):
         print(f"Saved book title: {new_book.title}")
 
 def main():
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    amqp_url = os.environ.get('amqps://lklnluig:9JOsBxLEM0WDUUSLtMhxz6fEIHyC21dZ@shark.rmq.cloudamqp.com/lklnluig')
+    params = pika.URLParameters(amqp_url)
+    connection = pika.BlockingConnection(params)
     channel = connection.channel()
     channel.queue_declare(queue='book_tasks')
     channel.basic_consume(queue='book_tasks', on_message_callback=process_task, auto_ack=True)

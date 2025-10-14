@@ -3,6 +3,7 @@ from flask import Flask, request, render_template_string
 from flask_sqlalchemy import SQLAlchemy
 import pika
 import json
+import os
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///books.db'
@@ -52,7 +53,9 @@ HTML_TEMPLATE = """
 """
 
 def send_to_queue(user_input):
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    amqp_url = os.environ.get('amqps://lklnluig:9JOsBxLEM0WDUUSLtMhxz6fEIHyC21dZ@shark.rmq.cloudamqp.com/lklnluig')
+    params = pika.URLParameters(amqp_url)
+    connection = pika.BlockingConnection(params)
     channel = connection.channel()
     channel.queue_declare(queue='book_tasks')
     task = json.dumps({"user_input": user_input})
