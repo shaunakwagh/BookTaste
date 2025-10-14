@@ -30,7 +30,6 @@ HTML_TEMPLATE = """
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Book Recommendation System</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 40px; }
         form { margin: 20px 0; }
@@ -39,7 +38,7 @@ HTML_TEMPLATE = """
     </style>
 </head>
 <body>
-    <h1>Book Recommendation System</h1>
+    <h1>Book Taste System</h1>
     <h3>Search and collect book data from Open Library API (queued)</h3>
     <form action="/collect" method="POST">
         <label>Enter ISBN (e.g., 9780140328721) or book title:</label><br>
