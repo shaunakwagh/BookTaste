@@ -4,6 +4,8 @@ import uuid
 from app import app, db, Book
 import os
 
+with app.app_context():
+    db.create_all()
 
 def fetch_book_data_with_rating(query):
     import urllib.parse
