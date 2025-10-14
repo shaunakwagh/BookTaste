@@ -41,7 +41,7 @@ HTML_TEMPLATE = """
     <h1>Book Taste System</h1>
     <h3>Search and collect book data from Open Library API (queued)</h3>
     <form action="/collect" method="POST">
-        <label>Enter ISBN (e.g., 9780140328721) or book title:</label><br>
+        <label>Enter ISBN (e.g., 9780545790352) or book title:</label><br>
         <input name="user_input" placeholder="ISBN or book title" required>
         <input type="submit" value="Queue Book Data!">
     </form>
