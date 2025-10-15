@@ -13,27 +13,37 @@ A small Flask-based book recommendation/collection app that fetches book details
 
 1. Clone the repo and change into the project folder:
 
-
-cd /path/to/BookRec/Bookrec
+```
+git clone <repo-url>
+cd Bookrec/Bookrec
+```
 
 2. Create a virtual environment and activate it (recommended):
 
+```
 python3 -m venv .venv
 source .venv/bin/activate
+```
 
-3. Install dependencies. If you don't have a requirements file, install Flask and SQLAlchemy:
+3. Install dependencies. If you don't have a `requirements.txt`, install the minimal packages used by the app:
 
 ```
 pip install Flask flask_sqlalchemy
 # Optional (used by tests):
-# pip install flask-testing
+pip install flask-testing
+```
+
+Tip: to create a `requirements.txt` for the current environment:
+
+```
+pip freeze > requirements.txt
 ```
 
 4. Run the app:
 
-
+```
 python app.py
-
+```
 
 Open http://127.0.0.1:5000 in your browser.
 
